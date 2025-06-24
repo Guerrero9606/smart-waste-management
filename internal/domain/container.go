@@ -28,9 +28,14 @@ type Container struct {
 	ID             string    `json:"id"`
 	Location       Point     `json:"location"`
 	CapacityLiters int       `json:"capacity_liters"`
-	CurrentStatus  Status    `json:"status"`
-	LastFillLevel  int       `json:"last_fill_level"`
-	LastUpdatedAt  time.Time `json:"last_updated"`
+	CurrentStatus  Status    `json:"status,omitempty"` // omitempty porque no se establece al crear
+	LastFillLevel  int       `json:"last_fill_level,omitempty"`
+	LastUpdatedAt  time.Time `json:"last_updated,omitempty"`
+
+	// --- CAMPOS ACTUALIZADOS ---
+	// Estos campos son gestionados por la base de datos y son cruciales para el tracking.
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // Reading representa una única lectura del sensor de un contenedor.
@@ -44,20 +49,18 @@ type Reading struct {
 // === Lógica de Negocio Pura ===
 
 // CalculateStatus determina el estado del contenedor ('low', 'medium', 'high')
-// basándose en su nivel de llenado. Esta lógica está centralizada aquí,
-// en el dominio, para que sea consistente en toda la aplicación.
+// basándose en su nivel de llenado.
 func CalculateStatus(fillLevel int) Status {
-	if fillLevel >= 80 { // A partir del 80% se considera lleno.
+	if fillLevel >= 80 {
 		return StatusHigh
 	}
-	if fillLevel >= 40 { // Entre 40% y 79% se considera medio.
+	if fillLevel >= 40 {
 		return StatusMedium
 	}
-	return StatusLow // Por debajo del 40% se considera bajo.
+	return StatusLow
 }
 
 // IsValid comprueba si los datos de una nueva lectura son válidos.
-// Esto desacopla la validación de la capa de handlers HTTP.
 func (r *Reading) IsValid() bool {
 	if r.ContainerID == "" {
 		return false

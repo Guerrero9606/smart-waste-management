@@ -1,0 +1,58 @@
+# docker-compose.yml
+
+version: '3.9' # Usar una versión reciente para tener acceso a todas las funcionalidades.
+
+services:
+  # --- Servicio de la Base de Datos (PostgreSQL con PostGIS) ---
+  db:
+    image: postgis/postgis:15-3.4-alpine # Imagen oficial y optimizada (alpine) de PostGIS.
+    container_name: smartwaste-db
+    environment:
+      # Las credenciales y configuración se leen desde el fichero .env
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432" # Expone el puerto de la BBDD al host local para poder conectarnos con un cliente si es necesario.
+    volumes:
+      # Monta el script de inicialización SQL para que se ejecute al crear el contenedor por primera vez.
+      - ./sql/01-init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      # Monta un volumen persistente para los datos, para que no se pierdan al reiniciar el contenedor.
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped # Reinicia el contenedor si se cae, a menos que lo detengamos manualmente.
+    healthcheck:
+      # Docker comprobará periódicamente si la base de datos está lista para aceptar conexiones.
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Servicio de la API (Backend en Go) ---
+  api:
+    # Construye la imagen a partir del Dockerfile que está en el mismo directorio.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartwaste-api
+    depends_on:
+      # No intentes iniciar la API hasta que la base de datos esté saludable (pase el healthcheck).
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT}:8080" # Expone el puerto 8080 del contenedor al puerto definido en .env en el host.
+    volumes:
+      # Monta el código fuente actual del host dentro del contenedor en /app.
+      # Esto es CLAVE para la recarga en caliente con 'air'.
+      - .:/app
+    env_file:
+      # Carga todas las variables de entorno desde el fichero .env
+      - .env
+    # Sobrescribe el comando por defecto del Dockerfile para usar 'air' durante el desarrollo.
+    command: air -c .air.toml
+    restart: unless-stopped
+
+# --- Volúmenes Nombrados ---
+# Definir el volumen aquí permite gestionarlo más fácilmente con comandos de Docker.
+volumes:
+  postgres-data:
+    driver: local

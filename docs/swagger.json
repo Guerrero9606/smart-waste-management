@@ -48,6 +48,240 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Registra un nuevo contenedor en el sistema con su ubicación y capacidad.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Containers"
+                ],
+                "summary": "Crea un nuevo contenedor",
+                "parameters": [
+                    {
+                        "description": "Datos del contenedor a crear",
+                        "name": "container",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/container.UpsertContainerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Contenedor creado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Container"
+                        }
+                    },
+                    "400": {
+                        "description": "Petición inválida o datos incorrectos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/containers/{id}": {
+            "get": {
+                "description": "Devuelve la información detallada de un único contenedor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Containers"
+                ],
+                "summary": "Obtiene un contenedor por su ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Contenedor (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Container"
+                        }
+                    },
+                    "404": {
+                        "description": "Contenedor no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Actualiza la ubicación y/o la capacidad de un contenedor existente.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Containers"
+                ],
+                "summary": "Actualiza un contenedor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Contenedor (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Nuevos datos del contenedor",
+                        "name": "container",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/container.UpsertContainerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contenedor actualizado exitosamente",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Petición inválida o datos incorrectos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Elimina un contenedor y todas sus lecturas asociadas del sistema.",
+                "tags": [
+                    "Containers"
+                ],
+                "summary": "Elimina un contenedor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Contenedor (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Sin contenido"
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/containers/{id}/readings": {
+            "get": {
+                "description": "Devuelve una lista de las últimas N lecturas de sensor para un contenedor específico.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Containers"
+                ],
+                "summary": "Obtiene el historial de lecturas de un contenedor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Contenedor (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número máximo de lecturas a devolver (por defecto 50)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Reading"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/readings": {
@@ -104,14 +338,110 @@
                     }
                 }
             }
+        },
+        "/routes": {
+            "post": {
+                "description": "Calcula una ruta óptima para visitar contenedores basados en su estado.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routes"
+                ],
+                "summary": "Genera una ruta de recogida",
+                "parameters": [
+                    {
+                        "description": "Parámetros para la generación de la ruta",
+                        "name": "routeRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/container.RouteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "La ruta optimizada como una lista ordenada de contenedores",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Container"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Petición inválida o datos incorrectos",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "container.RouteRequest": {
+            "type": "object",
+            "required": [
+                "start_point",
+                "statuses"
+            ],
+            "properties": {
+                "start_point": {
+                    "$ref": "#/definitions/domain.Point"
+                },
+                "statuses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Status"
+                    }
+                }
+            }
+        },
+        "container.UpsertContainerRequest": {
+            "type": "object",
+            "required": [
+                "capacity_liters",
+                "latitude",
+                "longitude"
+            ],
+            "properties": {
+                "capacity_liters": {
+                    "type": "integer"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                }
+            }
+        },
         "domain.Container": {
             "type": "object",
             "properties": {
                 "capacity_liters": {
                     "type": "integer"
+                },
+                "created_at": {
+                    "description": "--- CAMPOS ACTUALIZADOS ---\nEstos campos son gestionados por la base de datos y son cruciales para el tracking.",
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -126,7 +456,15 @@
                     "$ref": "#/definitions/domain.Point"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.Status"
+                    "description": "omitempty porque no se establece al crear",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Status"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

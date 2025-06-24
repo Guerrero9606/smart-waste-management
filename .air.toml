@@ -1,0 +1,29 @@
+# .air.toml
+# Configuración para la herramienta de live-reloading 'air'.
+
+# Directorio raíz del proyecto a observar.
+root = "."
+# Directorio temporal para los binarios compilados.
+tmp_dir = "tmp"
+
+[build]
+# Comando para construir la aplicación.
+cmd = "go build -o ./tmp/main ./cmd/api/main.go"
+# Binario que 'air' debe ejecutar después de construir.
+bin = "./tmp/main"
+# Ficheros a observar. Cuando cambien, se disparará la reconstrucción.
+include_ext = ["go", "tpl", "tmpl", "html"]
+# Ficheros a ignorar.
+exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+# Log del proceso de construcción.
+log = "build-errors.log"
+# Retraso antes de disparar la reconstrución (en milisegundos).
+delay = 1000 # 1s
+
+[log]
+# Muestra el tiempo en los logs.
+time = true
+
+[misc]
+# Elimina el directorio temporal al salir.
+clean_on_exit = true

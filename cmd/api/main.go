@@ -35,9 +35,16 @@ import (
 // @host       localhost:8080
 // @BasePath   /api/v1
 func main() {
-	// 1. Cargar configuración desde el fichero .env
-	if err := godotenv.Load(); err != nil {
-		log.Println("Advertencia: No se pudo cargar el fichero .env. Se usarán las variables de entorno del sistema.")
+	// 1. Cargar configuración desde ficheros .env
+	// Primero intenta cargar .env.local (prioridad alta para desarrollo local).
+	// Si no existe, intenta cargar .env (para Docker o entornos sin .env.local).
+	if err := godotenv.Load(".env.local"); err != nil {
+		log.Println("Info: No se encontró el fichero .env.local, intentando cargar .env")
+		if err := godotenv.Load(); err != nil {
+			log.Println("Advertencia: No se pudo cargar ningún fichero .env. Se usarán las variables de entorno del sistema.")
+		}
+	} else {
+		log.Println("Info: Configuración cargada desde .env.local")
 	}
 
 	// 2. Establecer conexión con la base de datos

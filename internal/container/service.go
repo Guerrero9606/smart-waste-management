@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"math"
 	"smart-waste-management/internal/domain"
 )
 
@@ -13,6 +14,14 @@ type Service interface {
 	ProcessNewReading(ctx context.Context, reading domain.Reading) error
 	// GetAllContainers obtiene todos los contenedores para su visualización.
 	GetAllContainers(ctx context.Context) ([]domain.Container, error)
+	// GenerateRoute crea una ruta de recogida optimizada.
+	GenerateRoute(ctx context.Context, startPoint domain.Point, statuses []domain.Status) ([]domain.Container, error)
+
+	CreateContainer(ctx context.Context, container domain.Container) (domain.Container, error)
+	GetContainerByID(ctx context.Context, id string) (domain.Container, error)
+	UpdateContainer(ctx context.Context, container domain.Container) error
+	DeleteContainer(ctx context.Context, id string) error
+	GetReadingsForContainer(ctx context.Context, id string, limit int) ([]domain.Reading, error)
 }
 
 // service es la implementación concreta de la interfaz Service.
@@ -71,4 +80,88 @@ func (s *service) GetAllContainers(ctx context.Context) ([]domain.Container, err
 	// se podría calcular y añadir aquí.
 
 	return containers, nil
+}
+
+func (s *service) GenerateRoute(ctx context.Context, startPoint domain.Point, statuses []domain.Status) ([]domain.Container, error) {
+	// 1. Obtener todos los contenedores que cumplen con el criterio desde el repositorio.
+	containersToVisit, err := s.repo.FindContainersByStatus(ctx, statuses)
+	if err != nil {
+		return nil, fmt.Errorf("no se pudieron obtener los contenedores para la ruta: %w", err)
+	}
+
+	if len(containersToVisit) == 0 {
+		return []domain.Container{}, nil // No hay contenedores que visitar, devolvemos una ruta vacía.
+	}
+
+	// 2. Aplicar el algoritmo de optimización (Vecino más cercano).
+	var route []domain.Container
+	currentPoint := startPoint
+
+	for len(containersToVisit) > 0 {
+		nearestIndex := -1
+		minDistance := math.MaxFloat64
+
+		// Encontrar el contenedor más cercano al punto actual.
+		for i, container := range containersToVisit {
+			dist := haversineDistance(currentPoint, container.Location)
+			if dist < minDistance {
+				minDistance = dist
+				nearestIndex = i
+			}
+		}
+
+		// Añadir el contenedor más cercano a la ruta.
+		nearestContainer := containersToVisit[nearestIndex]
+		route = append(route, nearestContainer)
+
+		// Actualizar el punto actual para la siguiente iteración.
+		currentPoint = nearestContainer.Location
+
+		// Eliminar el contenedor visitado de la lista de pendientes.
+		containersToVisit = append(containersToVisit[:nearestIndex], containersToVisit[nearestIndex+1:]...)
+	}
+
+	return route, nil
+}
+
+func (s *service) CreateContainer(ctx context.Context, container domain.Container) (domain.Container, error) {
+	// Aquí podría ir la validación de negocio, por ejemplo, comprobar si la capacidad es válida.
+	return s.repo.CreateContainer(ctx, container)
+}
+
+func (s *service) GetContainerByID(ctx context.Context, id string) (domain.Container, error) {
+	return s.repo.FindContainerByID(ctx, id)
+}
+
+func (s *service) UpdateContainer(ctx context.Context, container domain.Container) error {
+	return s.repo.UpdateContainer(ctx, container)
+}
+
+func (s *service) DeleteContainer(ctx context.Context, id string) error {
+	return s.repo.DeleteContainer(ctx, id)
+}
+
+func (s *service) GetReadingsForContainer(ctx context.Context, id string, limit int) ([]domain.Reading, error) {
+	if limit <= 0 || limit > 100 { // Ponemos un límite por defecto y máximo
+		limit = 50
+	}
+	return s.repo.FindReadingsByContainerID(ctx, id, limit)
+}
+
+// haversineDistance calcula la distancia en kilómetros entre dos puntos geográficos.
+// Es una función de utilidad que podemos añadir al final del fichero.
+func haversineDistance(p1, p2 domain.Point) float64 {
+	const R = 6371 // Radio de la Tierra en kilómetros
+	lat1Rad := p1.Latitude * math.Pi / 180
+	lon1Rad := p1.Longitude * math.Pi / 180
+	lat2Rad := p2.Latitude * math.Pi / 180
+	lon2Rad := p2.Longitude * math.Pi / 180
+
+	dLon := lon2Rad - lon1Rad
+	dLat := lat2Rad - lat1Rad
+
+	a := math.Pow(math.Sin(dLat/2), 2) + math.Cos(lat1Rad)*math.Cos(lat2Rad)*math.Pow(math.Sin(dLon/2), 2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+
+	return R * c
 }
