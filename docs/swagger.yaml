@@ -1,0 +1,117 @@
+basePath: /api/v1
+definitions:
+  domain.Container:
+    properties:
+      capacity_liters:
+        type: integer
+      id:
+        type: string
+      last_fill_level:
+        type: integer
+      last_updated:
+        type: string
+      location:
+        $ref: '#/definitions/domain.Point'
+      status:
+        $ref: '#/definitions/domain.Status'
+    type: object
+  domain.Point:
+    properties:
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+  domain.Reading:
+    properties:
+      container_id:
+        type: string
+      fill_level:
+        type: integer
+      timestamp:
+        type: string
+    type: object
+  domain.Status:
+    enum:
+    - low
+    - medium
+    - high
+    type: string
+    x-enum-varnames:
+    - StatusLow
+    - StatusMedium
+    - StatusHigh
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: API para la gestión y monitorización en tiempo real de contenedores
+    de basura.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Smart Waste Management API
+  version: "1.0"
+paths:
+  /containers:
+    get:
+      description: Devuelve una lista de todos los contenedores registrados con su
+        estado actual.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Container'
+            type: array
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtiene todos los contenedores
+      tags:
+      - Containers
+  /readings:
+    post:
+      consumes:
+      - application/json
+      description: Registra el nivel de llenado de un contenedor en un momento dado.
+      parameters:
+      - description: Datos de la lectura
+        in: body
+        name: reading
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Reading'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Lectura aceptada para procesamiento
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Petición inválida o datos incorrectos
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error interno del servidor
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crea una nueva lectura de sensor
+      tags:
+      - Ingest
+swagger: "2.0"

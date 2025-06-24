@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS containers (
     last_updated_at TIMESTAMPTZ, -- Timestamp con zona horaria de la última actualización de estado.
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NULL DEFAULT NOW()
 );
 
 -- Creamos un índice geoespacial GIST para acelerar las consultas de ubicación (ej. "contenedores en el área visible del mapa").
