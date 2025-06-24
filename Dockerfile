@@ -3,7 +3,7 @@
 # --- Etapa 1: Builder ---
 # Usamos una imagen oficial de Go con Alpine Linux, que es ligera.
 # La nombramos 'builder' para poder referirnos a ella más tarde.
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Establecemos el directorio de trabajo dentro del contenedor.
 WORKDIR /app
