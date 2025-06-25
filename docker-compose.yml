@@ -27,29 +27,21 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- Servicio de la API (Backend en Go) ---
+  # --- Servicio de la API (configuración de PRODUCCIÓN) ---
   api:
-    # Construye la imagen a partir del Dockerfile que está en el mismo directorio.
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: smartwaste-api
+    # Usa la imagen que acabamos de construir. NO usa 'build'.
+    image: smart-waste-api:1.0
+    container_name: smartwaste-api-prod
     depends_on:
-      # No intentes iniciar la API hasta que la base de datos esté saludable (pase el healthcheck).
       db:
         condition: service_healthy
     ports:
-      - "${API_PORT}:8080" # Expone el puerto 8080 del contenedor al puerto definido en .env en el host.
-    volumes:
-      # Monta el código fuente actual del host dentro del contenedor en /app.
-      # Esto es CLAVE para la recarga en caliente con 'air'.
-      - .:/app
+      - "${API_PORT}:8080"
     env_file:
-      # Carga todas las variables de entorno desde el fichero .env
+      # Carga las variables de entorno desde el .env.
+      # Asegúrate de que DB_HOST=db en este fichero.
       - .env
-    # Sobrescribe el comando por defecto del Dockerfile para usar 'air' durante el desarrollo.
-    command: air -c .air.toml
-    restart: unless-stopped
+    restart: always
 
 # --- Volúmenes Nombrados ---
 # Definir el volumen aquí permite gestionarlo más fácilmente con comandos de Docker.
